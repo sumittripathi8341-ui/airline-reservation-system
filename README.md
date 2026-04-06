@@ -3,13 +3,13 @@
 ## 📸 Screenshots
 
 ### 🏠 Home Page
-![Home](screenshots/Home.png)
+![Home](screenshots/home.png)
 
 ### 🔍 Search Flights
-![Search](screenshots/Search.png)
+![Search](screenshots/search.png)
 
 ### 🎟 Booking Page
-![Booking](screenshots/Booking.png)
+![Booking](screenshots/booking.png)
 
-<!-- ### 📋 My Bookings
-![MyBooking](screenshots/mybooking.png) -->
+### 📋 My Bookings
+![MyBooking](screenshots/mybooking.png)
