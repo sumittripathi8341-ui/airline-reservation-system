@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-5 mb-5">
+
+    <div class="terms-card">
+
+        <!-- HEADER -->
+        <div class="terms-header text-center">
+            <h2>📜 Terms & Conditions</h2>
+            <p>Please read these terms carefully before using our Airline Reservation System.</p>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="terms-content">
+
+            <div class="term-box">
+                <h5>✈ Booking Policy</h5>
+                <p>All bookings are subject to seat availability. Once confirmed, tickets cannot be transferred to another passenger.</p>
+            </div>
+
+            <div class="term-box">
+                <h5>💳 Payment</h5>
+                <p>Full payment must be completed at the time of booking. Failure to complete payment may result in cancellation.</p>
+            </div>
+
+            <div class="term-box">
+                <h5>❌ Cancellation & Refund</h5>
+                <p>Users can cancel tickets anytime before departure. Refund policies may vary depending on airline rules.</p>
+            </div>
+
+            <div class="term-box">
+                <h5>⏳ Waiting List</h5>
+                <p>If seats are unavailable, passengers will be placed on a waiting list and confirmed automatically if available.</p>
+            </div>
+
+            <div class="term-box">
+                <h5>👤 User Responsibility</h5>
+                <p>Users must provide accurate information. Incorrect details may lead to cancellation without refund.</p>
+            </div>
+
+            <div class="term-box">
+                <h5>🪪 Travel Requirements</h5>
+                <p>Passengers must carry valid identification documents during travel.</p>
+            </div>
+
+            <div class="term-box">
+                <h5>🔒 System Usage</h5>
+                <p>Misuse of the system or fraudulent activity may result in account suspension.</p>
+            </div>
+
+            <div class="term-box">
+                <h5>🔄 Changes to Terms</h5>
+                <p>We reserve the right to update these terms at any time without prior notice.</p>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="terms-footer text-center">
+            <p>© 2026 Airline Reservation System</p>
+            <a href="/" class="back-btn">✈ Back to Home</a>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- CSS -->
+<style>
+/* CARD */
+.terms-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* HEADER */
+.terms-header h2 {
+    font-weight: 700;
+}
+
+.terms-header p {
+    color: #777;
+}
+
+/* CONTENT GRID */
+.terms-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+}
+
+/* BOX */
+.term-box {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 15px;
+    transition: 0.3s;
+    border: 1px solid #eef2f7;
+}
+
+.term-box:hover {
+    transform: translateY(-5px);
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.term-box h5 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* FOOTER */
+.terms-footer {
+    margin-top: 30px;
+    color: #888;
+}
+
+/* BUTTON */
+.back-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 25px;
+    background: #2276e3;
+    color: white;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.back-btn:hover {
+    background: #1a5bbf;
+    transform: scale(1.05);
+}
+</style>
+
+{% endblock %}

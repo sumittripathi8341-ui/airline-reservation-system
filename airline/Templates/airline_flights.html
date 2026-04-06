@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-5">
+
+    <h2 class="mb-4">✈ {{ airline }} Flights</h2>
+
+    {% if flights %}
+
+        {% for flight in flights %}
+        <div class="flight-ticket mb-3">
+
+            <!-- LEFT SECTION -->
+            <div class="ticket-left">
+
+                <div class="flight-name">
+                    {{ flight.airline }}
+                    <span class="flight-no">({{ flight.flight_no }})</span>
+                </div>
+
+                <div class="route">
+                    {{ flight.source }} 
+                    <span class="arrow">→</span> 
+                    {{ flight.destination }}
+                </div>
+
+                <div class="time-date">
+                    🕒 {{ flight.arrival_time }} | 📅 {{ flight.date }}
+                </div>
+
+            </div>
+
+            <!-- MIDDLE LINE -->
+            <div class="ticket-divider"></div>
+
+            <!-- RIGHT SECTION -->
+            <div class="ticket-right">
+
+                <div class="price">₹{{ flight.price }}</div>
+
+                {% if flight.remaining_seats > 0 %}
+                    <div class="seats text-success">
+                        {{ flight.remaining_seats }} seats left
+                    </div>
+
+                    <a href="/book/{{ flight.id }}/?date={{ flight.date|date:'Y-m-d' }}"
+                       class="book-btn">
+                       Book
+                    </a>
+                {% else %}
+                    <div class="seats text-danger">Full</div>
+
+                    <button class="book-btn disabled" disabled>
+                        Not Available
+                    </button>
+                {% endif %}
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <h4>No flights available for this airline ❌</h4>
+    {% endif %}
+
+</div>
+
+<style>
+.flight-ticket {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid #eee;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: 0.3s;
+}
+
+.flight-ticket:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* LEFT */
+.ticket-left {
+    flex: 2;
+}
+
+.flight-name {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.flight-no {
+    font-size: 14px;
+    color: gray;
+}
+
+.route {
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+.arrow {
+    color: #2276e3;
+    font-weight: bold;
+}
+
+.time-date {
+    font-size: 13px;
+    color: gray;
+}
+
+/* DIVIDER */
+.ticket-divider {
+    width: 1px;
+    height: 60px;
+    background: #ddd;
+    margin: 0 20px;
+}
+
+/* RIGHT */
+.ticket-right {
+    text-align: right;
+}
+
+.price {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2276e3;
+}
+
+.seats {
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+/* BUTTON */
+.book-btn {
+    background: #2276e3;
+    color: white;
+    padding: 6px 15px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 13px;
+    transition: 0.3s;
+}
+
+.book-btn:hover {
+    background: #1a5bbf;
+}
+
+.book-btn.disabled {
+    background: gray;
+    cursor: not-allowed;
+}
+</style>
+
+{% endblock %}

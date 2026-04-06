@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    body {
+        background: linear-gradient(135deg, #eef2f3, #dfe9f3);
+        font-family: Arial;
+    }
+
+    
+    /* --- PREMIUM NAVBAR --- */
+    .navbar {
+        background: white !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        padding: 0.8rem 0;
+    }
+
+    .navbar-brand {
+        font-weight: bolder;
+        font-size: 1.5rem;
+        color: var(--ixigo-blue) !important;
+        display: flex;
+        align-items: center;
+    }
+
+    .nav-link {
+        color: var(--ixigo-dark) !important;
+        font-weight: 900;
+        margin: 0 10px;
+        transition: color 0.3s;
+    }
+
+    .nav-link:hover {
+        color: var(--ixigo-blue) !important;
+    }
+
+    /* --- IXIGO ACTION BUTTONS --- */
+    .btn-ixigo-primary {
+        background: var(--ixigo-blue);
+        color: white;
+        border-radius: 50px;
+        padding: 8px 25px;
+        font-weight: 600;
+        border: none;
+    }
+
+    .btn-ixigo-outline {
+        border: 2px solid var(--ixigo-blue);
+        color: var(--ixigo-blue);
+        border-radius: 50px;
+        padding: 6px 20px;
+        font-weight: 600;
+    }
+    
+    /* Plane */
+    .plane-container {
+        position: relative;
+        width: 800px;
+        height: 450px;
+        /* margin: 40px auto; */
+        margin-top: -7%;
+    }
+
+    .plane-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        margin-top: 30px;
+        /* opacity: 0.5; */
+
+    }
+
+    /* Seat */
+    .seat {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        border: 2px solid #333;
+        background: white;
+        /* 🔥 visible */
+        cursor: pointer;
+        z-index: 10;
+        margin-left: 0%;
+        margin-top: 5.2%;
+        opacity: 0.8;
+        /* filter: brightness(1.2); */
+    }
+
+    /* .seat:hover {
+        transform: scale(1.3);
+    } */
+
+    /* States */
+    .selected {
+        background: #28a745 !important;
+    }
+
+    .booked {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+
+    /* Labels */
+    .row-label {
+        position: absolute;
+        left: 70px;
+        font-weight: bold;
+        font-size: 14px;
+        z-index: 10;
+        margin-left: 80px;
+        margin-top: 5%;
+    }
+
+    /* Cards */
+    .card {
+        border-radius: 12px;
+    }
+
+    /* Legend */
+    .legend {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+    }
+
+    .legend.available {
+        background: #fff;
+        border: 1px solid #333;
+    }
+
+    .legend.selected {
+        background: #28a745;
+    }
+
+    .legend.booked {
+        background: #6c757d;
+    }
+</style>
+
+{% if error %}
+
+<div class="alert alert-danger text-center mt-3">
+    {{ error }}
+</div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    <input type="date" name="travel_date" value="{{ travel_date }}" class="form-control mb-3" readonly
+        style="font-weight:bold; text-align:center; margin-top:5%;">
+
+    <input type="hidden" name="selected_seats" id="selectedSeats">
+
+    <div class="container mt-4">
+        <div class="row">
+
+            <!-- LEFT PANEL -->
+
+            <div class="col-md-4 mt-5">
+
+                <div class="card shadow mb-3" style="margin-top: -8%;">
+                    <div class="card-header bg-primary text-white">✈ Flight Summary</div>
+
+                    <div class="card-body">
+                        <h4>{{ flight.flight_no }}</h4>
+                        <p>{{ flight.source }} → {{ flight.destination }}</p>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <span>Aircraft</span>
+                            <b>{{ flight.flight_no }}</b>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <span>Class</span>
+                            <span class="badge bg-info">Economy</span>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <span>Total Price</span>
+                            <h4 id="totalPrice">₹0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow p-3">
+                    <h6>Seat Legend</h6>
+
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="legend available"></div>
+                        <span class="ms-2">Available</span>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="legend selected"></div>
+                        <span class="ms-2">Selected</span>
+                    </div>
+
+                    <div class="d-flex align-items-center">
+                        <div class="legend booked"></div>
+                        <span class="ms-2">Booked</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT PANEL -->
+
+            <div class="col-md-8">
+
+                <h5 class="text-center mb-3"><b>Select Your Seat</b></h5>
+
+                <div class="plane-container">
+                    <img src="{% static 'images/flight4.jpeg' %}" alt="plane">
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <button type="button" id="confirmBtn" class="btn btn-success w-100 mt-3">
+        Continue →
+    </button>
+
+</form>
+
+<!-- 🔥 ALL JS AT BOTTOM -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const container = document.querySelector(".plane-container");
+
+        let startX = 150;
+        let startY = 153;
+        let gapX = 17;
+        let gapY = 18;
+        let sectionGap = 12;
+
+        const rows = ["A", "B", "C", "D", "E", "F"];
+
+        const bookedSeats = JSON.parse('{{ booked|escapejs }}');
+        const pricePerSeat = Number("{{ flight.price }}");
+
+        let selectedSeats = [];
+
+        rows.forEach((row, rIndex) => {
+
+            let extraGap = (rIndex >= 3) ? sectionGap : 0;
+            let y = startY + (rIndex * gapY) + extraGap;
+
+            /* Label */
+            let label = document.createElement("div");
+            label.classList.add("row-label");
+            label.innerText = row;
+            label.style.top = y + "px";
+            container.appendChild(label);
+
+            for (let i = 1; i <= 21; i++) {
+
+                let seatNo = row + i;
+
+                let seat = document.createElement("div");
+                seat.classList.add("seat");
+
+                let x = startX + (i * gapX);
+
+                // 🔥 GAP AFTER LEFT BLOCK (after seat 3)
+                if (i > 3) x += gapX;
+
+                // 🔥 GAP AFTER MIDDLE BLOCK (after seat 12)
+                if (i > 12) x += gapX;
+
+                seat.style.left = x + "px";
+                seat.style.top = y + "px";
+
+                if (bookedSeats.includes(seatNo)) {
+                    seat.classList.add("booked");
+                } else {
+                    seat.addEventListener("click", () => {
+
+                        seat.classList.toggle("selected");
+
+                        if (seat.classList.contains("selected")) {
+                            selectedSeats.push(seatNo);
+                        } else {
+                            selectedSeats = selectedSeats.filter(s => s !== seatNo);
+                        }
+
+                        updateUI();
+                    });
+                }
+
+                container.appendChild(seat);
+            }
+        });
+
+        /* Update UI */
+        function updateUI() {
+            let total = selectedSeats.length;
+
+            document.getElementById("selectedSeats").value = selectedSeats.join(",");
+
+            document.getElementById("totalPrice").innerText =
+                "₹" + (total * pricePerSeat);
+
+            document.getElementById("confirmBtn").innerText =
+                "Continue (" + total + " Seat" + (total > 1 ? "s" : "") + ") →";
+        }
+
+        /* Submit */
+        document.getElementById("confirmBtn").addEventListener("click", function () {
+
+            if (selectedSeats.length === 0) {
+                alert("Please select at least one seat ❗");
+                return;
+            }
+
+            this.closest("form").submit();
+        });
+
+    });
+</script>
+
+{% endblock %}

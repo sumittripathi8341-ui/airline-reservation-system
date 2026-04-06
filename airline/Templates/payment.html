@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- ✅ MESSAGES SHOULD BE HERE -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-info text-center">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+<style>
+.payment-container {
+    max-width: 500px;
+    margin: 7% auto;
+}
+
+/* CARD */
+.payment-card {
+    padding: 25px;
+    border-radius: 15px;
+    background: white;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* BUTTONS */
+.pay-option {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.pay-option:hover {
+    background: #f1f1f1;
+}
+
+/* PAY BUTTON */
+.pay-btn {
+    background: linear-gradient(135deg,#28a745,#218838);
+    color: white;
+    font-size: 18px;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+}
+</style>
+
+<div class="payment-container">
+
+    <div class="payment-card">
+
+        <h4 class="text-center mb-3">💳 Payment</h4>
+
+        <!-- SUMMARY -->
+        <div class="mb-3">
+            <p><strong>Flight:</strong> {{ flight.flight_no }}</p>
+            <p><strong>Passengers:</strong> {{ passengers }}</p>
+            <h5>Total: ₹ {{ total }}</h5>
+        </div>
+        <p><strong>Wallet Balance:</strong> ₹ {{ wallet.balance }}</p> 
+        <hr>
+
+        <!-- PAYMENT OPTIONS -->
+        <h6>Select Payment Method</h6>
+
+        <div class="pay-option" onclick="selectMethod('UPI')">
+            📱 UPI (Google Pay / PhonePe / Paytm)
+        </div>
+
+        <div class="pay-option" onclick="selectMethod('Wallet')">
+            👛 Wallet / Paytm Wallet
+        </div>
+
+        <div class="pay-option" onclick="selectMethod('COD')">
+            💵 Pay at Airport
+        </div>
+
+        <form method="post" id="paymentForm">
+            {% csrf_token %}
+            <input type="hidden" name="method" id="method">
+
+            <button type="button" id="payBtn" class="pay-btn w-100 mt-3">
+                Pay ₹ {{ total }}
+            </button>
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+let selectedMethod = "";
+
+// select payment method
+function selectMethod(method){
+    selectedMethod = method;
+    document.getElementById("method").value = method;
+
+    document.querySelectorAll(".pay-option").forEach(el => {
+        el.style.border = "1px solid #ddd";
+    });
+
+    event.target.style.border = "2px solid green";
+}
+
+// pay button
+document.getElementById("payBtn").addEventListener("click", function(){
+
+    if(selectedMethod === ""){
+        alert("Please select payment method ❗");
+        return;
+    }
+
+    this.innerText = "Processing...";
+    this.disabled = true;
+
+    // ✅ Direct submit (backend will decide success/fail)
+    document.getElementById("paymentForm").submit();
+});
+
+</script>
+
+{% endblock %}

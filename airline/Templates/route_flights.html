@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-5">
+
+    <h2 class="mb-4">✈ Flights from {{ city }}</h2>
+
+    {% if flights %}
+
+        {% for flight in flights %}
+        <div class="card mb-3 shadow-sm p-3">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <!-- LEFT SIDE -->
+                <div>
+                    
+                    <!-- Flight Name + Number -->
+                    <h5 class="mb-1">
+                        {{ flight.airline }} ({{ flight.flight_no }})
+                    </h5>
+
+                    <!-- ROUTE -->
+                    <div>
+                        {{ flight.source }} → {{ flight.destination }}
+                    </div>
+
+                    <!-- DATE & TIME -->
+                    <small>Date: {{ flight.date }}</small><br>
+                    <small>Time: {{ flight.arrival_time }}</small>
+                </div>
+
+                <!-- RIGHT SIDE -->
+                <div class="text-end">
+
+                    <h5>₹{{ flight.price }}</h5>
+
+                    {% if flight.remaining_seats > 0 %}
+                        <small class="text-success d-block mb-2">
+                            Seats: {{ flight.remaining_seats }}
+                        </small>
+
+                        <!-- ✅ BOOK BUTTON -->
+
+                        <a href="/book/{{ flight.id }}/?date={{ flight.date|date:'Y-m-d' }}" class="btn btn-primary btn-sm">
+                        <!-- <a href="/book/{{ flight.id }}/?date={{ flight.date }}" -->
+                           Book Now
+                        </a>
+
+                    {% else %}
+                        <small class="text-danger">
+                            Full ❌
+                        </small>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <h4>No flights available from {{ city }} ❌</h4>
+    {% endif %}
+
+</div>
+
+{% endblock %}

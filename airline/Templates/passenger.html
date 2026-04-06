@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <h3>Passenger Details</h3>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <input type="hidden" name="seats" value="{{ seats }}">
+        <input type="hidden" name="travel_date" value="{{ travel_date }}">
+
+        {% for s in seats_list %}
+        <div class="card p-3 mb-3">
+            <h5>Seat {{ s }}</h5>
+
+            <input type="text" name="name_{{ forloop.counter0 }}" placeholder="Name" class="form-control mb-2" required>
+
+            <input type="number" name="age_{{ forloop.counter0 }}" placeholder="Age" class="form-control mb-2" required>
+
+            <select name="gender_{{ forloop.counter0 }}" class="form-control">
+                <option>Male</option>
+                <option>Female</option>
+            </select>
+
+            <input type="hidden" name="seat_{{ forloop.counter0 }}" value="{{ s }}">
+        </div>
+        {% endfor %}
+
+        <input type="hidden" name="total_passengers" value="{{ seats_list|length }}">
+
+        <button class="btn btn-primary w-100">Continue to Payment</button>
+
+    </form>
+
+</div>
+
+{% endblock %}

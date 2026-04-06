@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Cancelled</title>
+</head>
+
+<body style="font-family: Arial, sans-serif; background:#f4f6f8; padding:20px;">
+
+    <div style="max-width:600px; margin:auto; background:white; padding:20px; border-radius:10px;">
+
+        <h2 style="color:#dc3545;">❌ Ticket Cancelled</h2>
+
+        <p>Hello <strong>{{ passenger_name }}</strong>,</p>
+
+        <p>Your ticket has been <strong style="color:#dc3545;">cancelled</strong>.</p>
+
+        <hr>
+
+        <h4>Booking Details:</h4>
+
+        <p><strong>PNR:</strong> {{ pnr }}</p>
+        <p><strong>Flight:</strong> {{ flight_no }}</p>
+        <p><strong>Source:</strong> {{ source }}</p>
+        <p><strong>Destination:</strong> {{ destination }}</p>
+        <p><strong>Status:</strong> {{ status }}</p>
+
+        <hr>
+
+        <p style="color:#6c757d;">
+            If this was not done by you, please contact support immediately.
+        </p>
+
+        <p style="margin-top:20px;">
+            Thank you,<br>
+            <span style="color:#dc3545; font-weight:bold;">
+                {{ airline|default:"Fligo Airlines" }} Airlines
+            </span> ✈️
+        </p>
+
+    </div>
+
+</body>
+
+</html>

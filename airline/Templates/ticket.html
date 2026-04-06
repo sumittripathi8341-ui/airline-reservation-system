@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    body {
+        background: #eef2f7;
+    }
+
+    .ticket-container {
+        max-width: 950px;
+        margin: 5% auto;
+        font-family: 'Arial', sans-serif;
+    }
+
+    .boarding-pass {
+        display: flex;
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        position: relative;
+        min-height: 340px;
+    }
+
+    /* ✈ TOP BAR */
+    .top-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 55px;
+        background: #00aced;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 30px;
+        color: #002d5b;
+        font-weight: bold;
+        letter-spacing: 1px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .top-bar img {
+        width: 30px;
+    }
+
+    /* 🔴 BOTTOM BAR */
+    .bottom-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 15px;
+        background: #e63946;
+    }
+
+    /* ✂ PERFORATION EFFECT */
+    .boarding-pass::before,
+    .boarding-pass::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 20px;
+        height: 20px;
+        background: #eef2f7;
+        border-radius: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+    }
+    .boarding-pass::before { left: -10px; }
+    .boarding-pass::after { right: -10px; }
+
+    /* LEFT */
+    .main-section {
+        flex: 2;
+        padding: 70px 30px 30px;
+        border-right: 2px dashed #ddd;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+    }
+
+    /* RIGHT */
+    .stub-section {
+        flex: 1;
+        padding: 70px 20px 30px;
+        background: #fdfdfd;
+    }
+
+    /* BARCODE */
+    .barcode {
+        grid-row: span 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .barcode img {
+        transform: rotate(90deg);
+        width: 130px;
+        opacity: 0.85;
+    }
+
+    /* TEXT */
+    .info-label {
+        font-size: 10px;
+        color: #002d5b;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .info-value {
+        font-size: 16px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 12px;
+    }
+
+    .route-display {
+        grid-column: span 2;
+        font-size: 24px;
+        color: #002d5b;
+        border-bottom: 1px solid #eee;
+    }
+
+    /* STATUS BADGE */
+    .status {
+        position: absolute;
+        top: 65px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 5px;
+        font-size: 12px;
+    }
+
+    /* BUTTON */
+    .btn-download {
+        background: #002d5b;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+</style>
+
+<div class="ticket-container">
+
+    <div class="boarding-pass">
+
+        <!-- ✈ HEADER -->
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:10px;">
+            <!-- <img src="https://img.icons8.com/color/96/airplane-take-off.png" width="35">       -->
+            <img src="https://img.icons8.com/ios-filled/100/000000/airplane-take-off.png" width="30">
+          <span>{{booking.flight.airline}} Airlines</span>
+            </div>
+            <span>BOARDING PASS</span>
+        </div>
+
+        <!-- STATUS -->
+        <div class="status">ON TIME</div>
+
+        <!-- LEFT -->
+        <div class="main-section">
+
+            <div class="route-display">
+                {{ booking.flight.source }} → {{ booking.flight.destination }}
+            </div>
+
+            <!-- BARCODE -->
+            <div class="barcode">
+                <img src="https://bwipjs-api.metafloor.com/?bcid=code128&text={{ booking.pnr }}&scale=3&rotate=I&includetext">
+            </div>
+
+            <div>
+                <div class="info-label">Passenger</div>
+                <div class="info-value">{{ booking.passenger_name }}</div>
+            </div>
+
+            <div>
+                <div class="info-label">Flight No.</div>
+                <div class="info-value">{{ booking.flight.flight_no }}</div>
+            </div>
+
+            <div>
+                <div class="info-label">Date</div>
+                <div class="info-value">{{ booking.travel_date|date:"d M Y" }}</div>
+            </div>
+
+            <div>
+                <div class="info-label">Departure</div>
+                <div class="info-value">{{ booking.flight.departure_time }}</div>
+            </div>
+
+            <div>
+                <div class="info-label">Arrival</div>
+                <div class="info-value">{{ booking.flight.arrival_time }}</div>
+            </div>
+
+            <div>
+                <div class="info-label">Seat</div>
+                <div class="info-value">{{ booking.seat_no }}</div>
+            </div>
+
+            <div>
+                <div class="info-label">Gate</div>
+                <div class="info-value">G12</div>
+            </div>
+
+            <div>
+                <div class="info-label">Terminal</div>
+                <div class="info-value">T1</div>
+            </div>
+
+            <div>
+                <div class="info-label">Class</div>
+                <div class="info-value">Economy</div>
+            </div>
+
+            <div>
+                <div class="info-label">Zone</div>
+                <div class="info-value">A</div>
+            </div>
+
+            <div>
+                <div class="info-label">PNR</div>
+                <div class="info-value" style="color:#e63946; font-size:18px;">
+                    {{ booking.pnr }}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT STUB -->
+        <div class="stub-section">
+
+            <div class="info-label">Passenger</div>
+            <div class="info-value" style="font-size:14px;">{{ booking.passenger_name }}</div>
+
+            <div class="info-label">From</div>
+            <div class="info-value" style="font-size:12px;">{{ booking.flight.source }}</div>
+
+            <div class="info-label">To</div>
+            <div class="info-value" style="font-size:12px;">{{ booking.flight.destination }}</div>
+
+            <div style="display:flex; justify-content: space-between;">
+                <div>
+                    <div class="info-label">Seat</div>
+                    <div class="info-value">{{ booking.seat_no }}</div>
+                </div>
+                <div>
+                    <div class="info-label">Date</div>
+                    <div class="info-value">{{ booking.travel_date|date:"d/m" }}</div>
+                </div>
+            </div>
+
+            <!-- QR CODE -->
+            <div style="text-align:center; margin-top:15px;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ booking.pnr }}">
+            </div>
+
+            <div class="info-label">PNR</div>
+            <div class="info-value" style="color:#e63946;">{{ booking.pnr }}</div>
+
+        </div>
+
+        <div class="bottom-bar"></div>
+
+    </div>
+
+    <!-- NOTE -->
+    <div style="margin-top:20px; font-size:12px; color:#555;">
+        ⚠ Please arrive at airport 2 hours before departure. Carry valid ID proof. Boarding closes 30 minutes before departure.
+    </div>
+
+    <!-- BUTTON -->
+    <div style="text-align:center; margin-top:20px;">
+        <a href="/download-ticket/{{ booking.id }}/" class="btn-download">
+            Download PDF Ticket
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

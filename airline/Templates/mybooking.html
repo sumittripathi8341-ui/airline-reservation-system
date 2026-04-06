@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Booking Page</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- <style>
+        .pnr-box {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            letter-spacing: 1px;
+            /* background:#5bbcd3; */
+            padding: 4px 8px;
+            border: 1px dashed #6c757d;
+            border-radius: 6px;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(45deg, #2193b0, #6dd5ed);
+            color: white;
+            border: none;
+        }
+
+        .btn-gradient:hover {
+            background: linear-gradient(45deg, #1c7a94, #5bbcd3);
+            color: white;
+        }
+    </style> -->
+</head>
+
+<body>
+    {% extends 'base.html' %} {% block content %}
+
+    <style>
+        .container-box {
+            margin-top: 6%;
+        }
+
+        /* TABLE STYLE */
+        .table-modern {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* PNR STYLE */
+        .pnr-link {
+            color: #0d6efd;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        /* SEAT BADGE */
+        .seat-badge {
+            background: #6c757d;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        /* STATUS */
+        .status-confirmed {
+            background: #198754;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .status-waiting {
+            background: #ffc107;
+            color: black;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .status-cancelled {
+            background: #dc3545;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        /* BUTTONS */
+        .btn-ticket {
+            background: #0d6efd;
+            color: white;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .btn-cancel {
+            background: white;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            font-size: 12px;
+        }
+
+        .btn-cancel:hover {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+
+    <div class="container container-box">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <h3 class="fw-bold m-0">My Bookings</h3>
+
+            <form method="post" action="/clear-bookings/"
+                onsubmit="return confirm('Clear all expired and cancelled tickets?')">
+                {% csrf_token %}
+                <button class="btn btn-danger btn-sm">
+                    🗑 Clear Old Tickets
+                </button>
+            </form>
+
+        </div>
+
+        <div class="table-responsive table-modern shadow-sm">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>PNR</th>
+                        <th>Passenger</th>
+                        <th>Flight Details</th>
+                        <th>Travel Date</th>
+                        <th>Seat</th>
+                        <th>Status</th>
+                        <th style="text-align: center">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for b in bookings %}
+                    <tr>
+                        <!-- PNR -->
+                        <td>
+                            <span class="pnr-link">{{ b.pnr }}</span>
+                        </td>
+
+                        <!-- Passenger -->
+                        <td>{{ b.passenger_name }}</td>
+
+                        <!-- Flight -->
+                        <td>
+                            <strong>{{ b.flight.flight_no }}</strong><br />
+                            <small class="text-muted">
+                                {{ b.flight.source }} → {{ b.flight.destination }}
+                            </small>
+                        </td>
+
+                        <!-- Date -->
+                        <td>
+                            {{ b.travel_date|date:"d M Y" }}<br />
+                            <small class="text-muted">
+                                {{ b.flight.departure_time }}
+                            </small>
+                        </td>
+
+                        <!-- Seat -->
+                        <td>
+                            <span class="seat-badge">{{ b.seat_no }}</span>
+                        </td>
+
+                        <!-- Status -->
+                        <td>
+                            {% if b.status == "Expired" %}
+                            <span class="status-cancelled">Expired ❌</span>
+
+                            {% elif b.status == "Confirmed" %}
+                            <span class="status-confirmed">Confirmed</span>
+
+                            {% elif b.status == "Waiting" %}
+                            <span class="status-waiting">Waiting</span>
+
+                            {% else %}
+                            <span class="status-cancelled">Cancelled</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions -->
+                        <td style="text-align: center">
+                            {% if b.status == "Expired" %}
+                            <small class="text-muted">Expired</small>
+
+                            {% elif b.status == "Confirmed" %}
+                            <a href="/ticket/{{ b.id }}/" class="btn btn-ticket btn-sm">🎫 Ticket</a>
+
+                            <a href="/cancel/{{ b.id }}/" class="btn btn-cancel btn-sm"
+                                onclick="return confirm('Cancel this ticket?')">
+                                ✖ Cancel
+                            </a>
+
+                            {% elif b.status == "Waiting" %}
+                            <a href="/cancel/{{ b.id }}/" class="btn btn-cancel btn-sm"
+                                onclick="return confirm('Cancel this waiting ticket?')">
+                                ✖ Cancel
+                            </a>
+
+                            {% else %}
+                            <small class="text-muted">No actions available</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            No bookings found. Time to travel ✈
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- BUTTON -->
+        <div class="text-center mt-4">
+            <a href="/search/" class="btn btn-success px-4">
+                ✈ Book More Flights
+            </a>
+        </div>
+    </div>
+
+    {% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<body style="font-family: Arial, sans-serif; background:#f5f6fa; padding:20px;">
+
+    <div style="background:white; padding:20px; border-radius:10px; max-width:500px; margin:auto;">
+
+        <div style="text-align:center; font-size:20px; font-weight:bold; color:#007bff;">
+            ✈ Fligo Airlines E-Ticket
+        </div>
+
+        <p>Hello, <strong>{{ passenger_name }}</strong> 👋</p>
+
+        <p>
+            Thank you for choosing
+            <span style="color:#007bff; font-weight:bold;">
+                {{ airline|default:"Fligo Airlines" }} Airlines
+            </span> ✈️
+        </p>
+
+        <div style="background:#f1f1f1; padding:10px; border-radius:8px; margin-top:10px;">
+            <p><strong>Flight:</strong> {{ flight_no }}</p>
+            <p><strong>Route:</strong> {{ source }} → {{ destination }}</p>
+            <p><strong>Date:</strong> {{ date }}</p>
+            <p><strong>Departure Time:</strong> {{ time }}</p>
+            <p><strong>Seat:</strong> {{ seat }}</p>
+            <p><strong>PNR:</strong> {{ pnr }}</p>
+        </div>
+
+        <p>Your booking status is:</p>
+
+        {% if status == 'CONFIRMED' %}
+        <h3 style="color:green; font-weight:bold;">{{ status }}</h3>
+        {% else %}
+        <h3 style="color:orange; font-weight:bold;">{{ status }}</h3>
+        {% endif %}
+
+        <p>📎 Your ticket is attached as a PDF.</p>
+
+        <hr>
+
+        <div style="font-size:12px; color:#777; text-align:center;">
+            This is an automated message. Please do not reply.<br>
+            © {{ airline }} Airlines
+        </div>
+
+    </div>
+
+</body>
+
+</html>
