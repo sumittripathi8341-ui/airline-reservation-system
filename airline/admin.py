@@ -1,7 +1,15 @@
-from django.contrib import admin
-from .models import User, Flight, Reservation
+# from django.contrib import admin
+# from .models import User, Flight, Reservation
 
-# Register your models here.
-admin.site.register(User)
+# # Register your models here.
+# admin.site.register(User)
+# admin.site.register(Flight)
+# admin.site.register(Reservation)
+
+
+from django.contrib import admin
+from .models import Flight, Reservation, Wallet
+
 admin.site.register(Flight)
 admin.site.register(Reservation)
+admin.site.register(Wallet)

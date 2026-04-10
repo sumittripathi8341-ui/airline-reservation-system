@@ -42,4 +42,5 @@ urlpatterns = [
 
     path('clear-bookings/', views.clear_bookings),
 
+    path('add-money/', views.add_money, name='add_money'),
 ]
