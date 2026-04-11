@@ -735,6 +735,8 @@ def clear_bookings(request):
 
     return redirect('/mybooking')
 
+def fake_upi_pay(request):
+    return render(request, 'fake_upi_pay.html', {'total': request.GET.get('amount', 1)})
 
 
 # from django.contrib.auth.models import User as AuthUser

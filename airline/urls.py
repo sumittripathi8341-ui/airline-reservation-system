@@ -41,6 +41,7 @@ urlpatterns = [
     path('reset-password/', views.reset_password),
 
     path('clear-bookings/', views.clear_bookings),
+    path('fake-upi-pay/', views.fake_upi_pay, name='fake_upi_pay'),
 
 
 ]

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>UPI Payment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial;
+            background: #f5f5f5;
+            padding-top: 60px;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            margin: auto;
+            width: 90%;
+            max-width: 350px;
+            border-radius: 10px;
+        }
+        button {
+            padding: 15px;
+            width: 100%;
+            background: green;
+            color: white;
+            border: none;
+            font-size: 18px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+    <h2>💳 UPI Payment</h2>
+    <p>Fligo Airlines</p>
+    <p>Amount: ₹100</p>
+
+    <button onclick="payNow()">Pay Now</button>
+</div>
+
+<script>
+function payNow(){
+    alert("Payment Successful ✅");
+
+    // 🔴 CHANGE THIS (VERY IMPORTANT)
+    window.location.href = "http://YOUR_IP:8000/payment/?paid=true";
+}
+</script>
+
+</body>
+</html>

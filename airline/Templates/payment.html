@@ -3,199 +3,146 @@
 {% block content %}
 
 <div id="paymentOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; text-align: center; padding-top: 15%;">
-    <div id="spinnerIcon" class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
-    
+    <div id="spinnerIcon" class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+
     <div id="overlayContent">
         <h3 class="mt-4" style="color: #003366;" id="processingTitle">Authenticating Transaction</h3>
         <p class="text-muted" id="processingSub">Communicating with Secure Payment Server...</p>
-        
-        <div id="successPop" class="alert alert-success d-inline-block shadow-sm" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; min-width: 320px; border-radius: 12px; border: 2px solid #28a745; background-color: #effff4; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center;">
-            <div style="font-size: 30px; color: #28a745; margin-bottom: 10px;">
-                <i class="fa fa-check-circle"></i>
-            </div>
-            <h4 class="alert-heading">Payment Successful!</h4>
-            <p class="mb-0">Your payment via <strong id="usedMethodText">Method</strong> has been confirmed.</p>
-            <hr>
-            <p class="small mb-0">Finalizing PNR & Generating Your Ticket...</p>
+
+        <div id="successPop" class="alert alert-success" style="display:none;">
+            <h4>Payment Successful!</h4>
+            <p>Generating Ticket...</p>
         </div>
 
-        <div class="badge badge-info p-3 mt-3" style="font-size: 1.2rem; border-radius: 50px;">
-            <i class="fa fa-clock-o"></i> Finalizing in: <span id="timerCount">10</span>s
+        <div class="badge badge-info p-3 mt-3">
+            Finalizing in: <span id="timerCount">10</span>s
         </div>
-    </div>
-    
-    <div class="alert alert-warning d-inline-block mt-4 shadow-sm" style="max-width: 450px; border-radius: 15px;">
-        <i class="fa fa-exclamation-triangle"></i> <strong>Important:</strong> Do not refresh this page.
     </div>
 </div>
 
 <style>
-    body { background-color: #f8fafd; font-family: 'Segoe UI', sans-serif; }
-    .payment-container { max-width: 580px; margin: 40px auto; }
-    .payment-card { border: none; border-radius: 20px; background: #fff; box-shadow: 0 15px 45px rgba(0,0,0,0.1); overflow: hidden; }
-    .gateway-header { background: #003366; color: white; padding: 25px; text-align: center; border-bottom: 5px solid #fb641b; }
-    .fare-summary { background: #fff9e6; border: 1px solid #ffeeba; padding: 20px; border-radius: 15px; margin-bottom: 25px; }
-    .method-box { border: 1px solid #e0e0e0; border-radius: 15px; padding: 18px; margin-bottom: 15px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; }
-    .method-box:hover { border-color: #003366; background: #f8fbff; transform: scale(1.02); }
-    .method-box.active { border: 2.5px solid #003366 !important; background: #f0f7ff !important; }
-
-    #upiDualSection, #walletTopupSection { display: none; margin-top: -10px; margin-bottom: 25px; padding: 25px; background: #ffffff; border: 1px solid #003366; border-top: none; border-radius: 0 0 20px 20px; text-align: center; }
-    .upi-nav { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
-    .upi-tab-btn { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 10px; background: #f8f9fa; cursor: pointer; font-weight: bold; }
-    .upi-tab-btn.active { background: #003366; color: white; }
-    .qr-frame { border: 3px solid #003366; padding: 12px; border-radius: 15px; display: inline-block; background: white; }
-    
-    .pay-btn, .confirm-btn { color: white; font-weight: bold; font-size: 1.15rem; padding: 16px; border-radius: 12px; border: none; transition: 0.3s; width: 100%; text-transform: uppercase; cursor: pointer; }
-    .pay-btn { background: linear-gradient(135deg, #fb641b, #f4511e); }
-    .confirm-btn { background: #28a745; margin-top: 15px; }
-
-    #successPop { animation: scaleUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    @keyframes scaleUp { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+.payment-container { max-width: 580px; margin: 40px auto; }
+.method-box { border:1px solid #ccc; padding:15px; margin-bottom:10px; cursor:pointer; }
+.method-box.active { border:2px solid #003366; }
+.qr-frame { border:3px solid #003366; padding:10px; display:inline-block; }
+.confirm-btn, .pay-btn { padding:12px; width:100%; border:none; color:white; font-weight:bold; }
+.confirm-btn { background:green; margin-top:10px; }
+.pay-btn { background:orange; }
 </style>
 
 <div class="payment-container">
-    <div class="payment-card">
-        <div class="gateway-header">
-            <h4 class="mb-0"><i class="fa fa-shield"></i> Fligo Secure Checkout</h4>
-        </div>
 
-        <div class="p-4">
-            <div class="fare-summary shadow-sm">
-                <div class="d-flex justify-content-between small text-muted">
-                    <span>Flight: <strong>{{ flight.flight_no }}</strong></span>
-                    <span>Date: <strong>{{ flight.date }}</strong></span>
-                </div>
-                <hr class="my-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="h6 mb-0 font-weight-bold">Final Amount to Pay:</span>
-                    <span class="h4 mb-0 text-success font-weight-bold">₹ {{ total }}</span>
-                </div>
-            </div>
+    <h4>Amount: ₹ {{ total }}</h4>
 
-            <h6 class="mb-3 text-secondary small font-weight-bold text-uppercase">Select Payment Method</h6>
-
-            <div class="method-box" id="upiBox" onclick="selectMethod('UPI', this)">
-                <div class="method-icon">📱</div>
-                <div class="flex-grow-1">
-                    <div class="font-weight-bold">UPI Payments</div>
-                    <small class="text-muted">Instant Pay via QR or UPI ID</small>
-                </div>
-            </div>
-
-            <div id="upiDualSection">
-                <div class="upi-nav">
-                    <button type="button" class="upi-tab-btn active" onclick="switchUpiTab('QR', this)">Scan QR</button>
-                    <button type="button" class="upi-tab-btn" onclick="switchUpiTab('ID', this)">Enter UPI ID</button>
-                </div>
-                <div id="upiQrTab">
-                    <div class="qr-frame mb-3">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=8305970485@uboi%26pn=FligoAirlines%26am=1.0%26cu=INR%26tn=TicketBooking" alt="UPI QR">
-                    </div>
-                    <p class="small text-primary font-weight-bold mb-3">Scan this QR via any UPI App</p>
-                </div>
-                <div id="upiIdTab" class="text-left" style="display: none;">
-                    <label class="small font-weight-bold text-muted">Enter your VPA / UPI ID:</label>
-                    <input type="text" id="userUpiId" class="form-control form-control-lg mb-2" placeholder="username@bank" style="border: 2px solid #003366; border-radius: 10px;">
-                </div>
-                <button type="button" onclick="initiatePayment()" class="confirm-btn">I HAVE PAID - PROCEED ✅</button>
-            </div>
-
-            <div class="method-box" id="walletBox" onclick="selectMethod('Wallet', this)">
-                <div class="method-icon">👛</div>
-                <div class="flex-grow-1">
-                    <div class="font-weight-bold">Fligo Wallet</div>
-                    <small class="text-muted">Balance: ₹ <span id="currentWalletBalance">0.0</span></small>
-                </div>
-            </div>
-
-            <div id="walletTopupSection" style="display: none; margin-top: -10px; margin-bottom: 25px; padding: 25px; background: #fff; border: 1px solid #fb641b; border-top: none; border-radius: 0 0 20px 20px; text-align: center;">
-                <div class="alert alert-danger py-2 small">Insufficient Balance! Top-up required.</div>
-                <div class="qr-frame mb-3" style="border-color: #fb641b;">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=8305970485@uboi%26pn=FligoAirlines%26am={{ total }}%26cu=INR" alt="Top-up QR">
-                </div>
-                <p class="small font-weight-bold text-danger">Scan to add ₹ {{ total }} to Wallet</p>
-                <button type="button" onclick="initiatePayment()" class="confirm-btn" style="background: #fb641b;">ADD MONEY & PROCEED</button>
-            </div>
-
-            <div class="method-box" id="codBox" onclick="selectMethod('COD', this)">
-                <div class="method-icon">💵</div>
-                <div class="flex-grow-1">
-                    <div class="font-weight-bold">Pay at Airport (COD)</div>
-                </div>
-            </div>
-
-            <form method="post" id="paymentForm">
-                {% csrf_token %}
-                <input type="hidden" name="method" id="methodField">
-                <input type="hidden" name="user_upi" id="hiddenUserUpi">
-                <button type="button" id="mainPayBtn" onclick="initiatePayment()" class="pay-btn mt-3" style="display:none;">CONFIRM & PAY ₹ {{ total }}</button>
-            </form>
-        </div>
+    <div class="method-box" onclick="selectMethod('UPI', this)">
+        📱 UPI Payment
     </div>
+
+    <div id="upiSection" style="display:none; text-align:center;">
+
+        <!-- QR -->
+        <div class="qr-frame mb-3" onclick="simulateScan()">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://yourname.github.io/upi-payment/fake_upi_payment.html">
+        </div>
+
+        <p id="scanStatus">Scan QR to continue</p>
+
+        <button onclick="initiatePayment()" class="confirm-btn">
+            I HAVE PAID - PROCEED
+        </button>
+    </div>
+
+    <form method="post" id="paymentForm">
+        {% csrf_token %}
+        <input type="hidden" name="method" id="methodField">
+    </form>
+
 </div>
 
 <script>
-    let selectedMethod = "";
-    let currentUpiTab = "QR";
 
-    function selectMethod(method, element) {
-        selectedMethod = method;
-        document.getElementById("methodField").value = method;
-        document.querySelectorAll(".method-box").forEach(el => el.classList.remove('active'));
-        element.classList.add('active');
+let selectedMethod = "";
+let isQrScanned = false;
+let isPaymentClicked = false;
 
-        const upiSec = document.getElementById("upiDualSection");
-        const walletSec = document.getElementById("walletTopupSection");
-        const mainBtn = document.getElementById("mainPayBtn");
+// select method
+function selectMethod(method, el){
+    selectedMethod = method;
+    document.getElementById("methodField").value = method;
 
-        upiSec.style.display = (method === 'UPI') ? "block" : "none";
-        walletSec.style.display = (method === 'Wallet') ? "block" : "none";
-        mainBtn.style.display = (method === 'COD') ? "block" : "none";
+    document.querySelectorAll(".method-box").forEach(e=>e.classList.remove("active"));
+    el.classList.add("active");
+
+    document.getElementById("upiSection").style.display = "block";
+}
+
+// simulate scan
+function simulateScan(){
+    isQrScanned = true;
+    document.getElementById("scanStatus").innerText = "✅ QR Scanned Successfully";
+}
+window.onload = function(){
+    const urlParams = new URLSearchParams(window.location.search);
+
+    if(urlParams.get("paid") === "true"){
+        initiatePayment();
+    }
+}
+
+// payment
+function initiatePayment(){
+
+    if(!selectedMethod){
+        return alert("Select payment method");
     }
 
-    function switchUpiTab(tab, btn) {
-        currentUpiTab = tab;
-        document.querySelectorAll(".upi-tab-btn").forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById("upiQrTab").style.display = (tab === 'QR') ? "block" : "none";
-        document.getElementById("upiIdTab").style.display = (tab === 'ID') ? "block" : "none";
+    // 🔥 IMPORTANT VALIDATION
+    if(!isQrScanned){
+        return alert("❌ Please scan QR first!");
     }
 
-    function initiatePayment() {
-        if (!selectedMethod) return alert("Select a method!");
+    // mobile fake pay
+    if(/Android|iPhone|iPad/i.test(navigator.userAgent)){
 
-        if (selectedMethod === "UPI" && currentUpiTab === "ID") {
-            const upiId = document.getElementById("userUpiId").value.trim();
-            if (!upiId.includes("@")) return alert("Enter valid UPI ID!");
-            document.getElementById("hiddenUserUpi").value = upiId;
+        let confirmPay = confirm("Click OK to Pay Now (Fake UPI)");
+
+        if(confirmPay){
+            isPaymentClicked = true;
+        }else{
+            return;
         }
 
-        document.getElementById('paymentOverlay').style.display = 'block';
-        document.getElementById('usedMethodText').innerText = selectedMethod;
-
-        let timeLeft = 10;
-        let countdown = setInterval(() => {
-            timeLeft--;
-            document.getElementById('timerCount').innerText = timeLeft;
-
-            // 🔥 Success popup at 8 seconds mark (2 seconds into processing)
-            if (timeLeft <= 8) {
-                document.getElementById('spinnerIcon').style.display = 'none';
-                document.getElementById('processingTitle').style.display = 'none';
-                document.getElementById('processingSub').style.display = 'none';
-                document.getElementById('successPop').style.display = 'inline-block';
-            }
-
-            if (timeLeft <= 0) {
-                clearInterval(countdown);
-                document.getElementById("paymentForm").submit();
-            }
-        }, 1000); // 1000ms = 1 second
-
-        if (selectedMethod === "UPI" && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
-            window.location.href = "upi://pay?pa=8305970485@uboi&pn=FligoAirlines&am=1.0&cu=INR";
-        }
+    } else {
+        // desktop fallback
+        isPaymentClicked = true;
     }
+
+    if(!isPaymentClicked){
+        return alert("❌ Payment not completed!");
+    }
+
+    // overlay
+    document.getElementById("paymentOverlay").style.display = "block";
+
+    let time = 10;
+
+    let timer = setInterval(()=>{
+        time--;
+        document.getElementById("timerCount").innerText = time;
+
+        if(time <= 8){
+            document.getElementById("spinnerIcon").style.display="none";
+            document.getElementById("successPop").style.display="block";
+        }
+
+        if(time <= 0){
+            clearInterval(timer);
+            document.getElementById("paymentForm").submit();
+        }
+
+    },1000);
+}
+
 </script>
 
 {% endblock %}
