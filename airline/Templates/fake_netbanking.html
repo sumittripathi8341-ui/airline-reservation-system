@@ -1,0 +1,251 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fligo : Net Banking Payment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="{% static 'images/logo1.jpg' %}" type="image/jpeg">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #003366, #0059b3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .box {
+            background: white;
+            padding: 30px;
+            width: 90%;
+            max-width: 380px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        h3 {
+            margin-bottom: 10px;
+            color: #003366;
+        }
+
+        .amount-box {
+            background: #f0f7ff;
+            border: 1px solid #cce0ff;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #003366;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: #003366;
+            box-shadow: 0 0 6px rgba(0,51,102,0.2);
+            outline: none;
+        }
+
+        button {
+            padding: 14px;
+            width: 100%;
+            background: linear-gradient(135deg, #28a745, #218838);
+            color: white;
+            border: none;
+            font-size: 16px;
+            margin-top: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.03);
+        }
+
+        #loading {
+            display: none;
+            margin-top: 10px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .secure {
+            font-size: 12px;
+            margin-top: 10px;
+            color: #888;
+        }
+
+        .captcha-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+input, select {
+    height: 45px;
+    box-sizing: border-box;
+}
+
+.captcha-box {
+    flex: 1;
+    height: 45px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 2px;
+    background: #f1f1f1;
+}
+
+.refresh-btn {
+    margin-top: -1px;
+    width: 50px;
+    height: 45px;
+    border-radius: 8px;
+    border: none;
+    background: #e0e0e0;
+    cursor: pointer;
+    font-size: 16px;
+}
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <h3>🏦 Net Banking</h3>
+
+    <!-- ✅ AMOUNT -->
+    <div class="amount-box">
+        Amount to Pay: ₹ <span id="amount">0</span>
+    </div>
+
+    <div class="subtitle">Secure Payment Gateway</div>
+
+    <!-- BANK -->
+    <select id="bank">
+        <option value="">Select Bank</option>
+        <option>SBI</option>
+        <option>HDFC Bank</option>
+        <option>ICICI Bank</option>
+        <option>Axis Bank</option>
+    </select>
+
+    <!-- USER -->
+    <input type="text" id="username" placeholder="User ID / Customer ID">
+    <input type="password" id="password" placeholder="Login Password">
+
+    <!-- ACCOUNT -->
+    <input type="text" id="acc" placeholder="Account Number" width="25px">
+    <input type="text" id="ifsc" placeholder="IFSC Code">
+
+    <!-- OTP -->
+    <input type="text" id="otp" placeholder="Enter PIN (1234 for demo)">
+
+    <!-- CAPTCHA -->
+    <div class="captcha-row">
+        <input type="text" id="captchaDisplay" class="captcha-box" readonly>
+        <button type="button" class="refresh-btn" onclick="generateCaptcha()">🔄</button>
+    </div>
+
+    <input type="text" id="captchaInput" placeholder="Enter CAPTCHA">
+
+    <!-- PAY -->
+    <button onclick="payNow()">🔐 Pay Securely</button>
+
+    <div id="loading">Processing secure payment...</div>
+
+    <div class="secure">🔒 256-bit Secure Payment</div>
+
+</div>
+
+<script>
+let currentCaptcha = "";
+
+// LOAD EVERYTHING AFTER PAGE LOAD
+window.onload = function() {
+
+    // CAPTCHA
+    generateCaptcha();
+
+    // AMOUNT
+    const params = new URLSearchParams(window.location.search);
+    const amt = params.get("amount");
+
+    document.getElementById("amount").innerText = amt ? amt : "0";
+
+};
+
+
+// CAPTCHA GENERATOR
+function generateCaptcha() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789abcdefghijklmnopqrstuvwxyz";
+    let captcha = "";
+
+    for (let i = 0; i < 5; i++) {
+        captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    currentCaptcha = captcha;
+    document.getElementById("captchaDisplay").value = captcha;
+}
+
+
+// PAYMENT FUNCTION
+function payNow(){
+
+    let bank = document.getElementById("bank").value;
+    let user = document.getElementById("username").value;
+    let pass = document.getElementById("password").value;
+    let acc = document.getElementById("acc").value;
+    let ifsc = document.getElementById("ifsc").value;
+    let otp = document.getElementById("otp").value;
+    let captchaInput = document.getElementById("captchaInput").value;
+
+    if(!bank || !user || !pass || !acc || !ifsc || !otp || !captchaInput){
+        alert("Please fill all details");
+        return;
+    }
+
+    if(otp !== "1234"){
+        alert("Invalid PIN (Use 1234)");
+        return;
+    }
+
+    if(captchaInput !== currentCaptcha){
+        alert("Invalid CAPTCHA");
+        generateCaptcha();
+        return;
+    }
+
+    document.querySelector("button").disabled = true;
+    document.getElementById("loading").style.display = "block";
+
+    setTimeout(() => {
+        window.location.href = "http://127.0.0.1:8000/payment/?paid=true";
+    }, 1500);
+}
+</script>
+
+</body>
+</html>

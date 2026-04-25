@@ -1,3 +1,5 @@
+{% extends 'base.html' %}
+{% load static %}
 <!doctype html>
 <html lang="en">
 
@@ -33,7 +35,7 @@
 </head>
 
 <body>
-    {% extends 'base.html' %} {% block content %}
+    {% block content %}
 
     <style>
         .container-box {
@@ -131,6 +133,7 @@
                         <th>PNR</th>
                         <th>Passenger</th>
                         <th>Flight Details</th>
+                        <th>Book Date</th>
                         <th>Travel Date</th>
                         <th>Seat</th>
                         <th>Status</th>
@@ -157,6 +160,15 @@
                             </small>
                         </td>
 
+                        <td>
+                            <div>
+                                <small class="text-muted d-block">Booked</small>
+                                <span class="text-primary fw-bold">
+                                    {{ b.booking_date|date:"d M Y" }}
+                                    
+                                </span>
+                            </div>
+                        </td>
                         <!-- Date -->
                         <td>
                             {{ b.travel_date|date:"d M Y" }}<br />

@@ -246,87 +246,277 @@ def passenger(request, id):
     })
 
 
+# # ================= PAYMENT =================
+# # ================= PAYMENT =================
+# @transaction.atomic
+# def payment(request):
+
+#     # 1. AUTH CHECK
+#     if 'user' not in request.session:
+#         return redirect('/login')
+
+#     user = User.objects.filter(username=request.session['user']).first()
+
+#     # 2. DATA CHECK
+#     data = request.session.get('booking_data')
+#     if not data:
+#         messages.error(request, "Session expired or no booking data found.")
+#         return redirect('/search')
+
+#     # 3. LOCK OBJECTS
+#     wallet = Wallet.objects.select_for_update().get(user=user)
+#     flight = Flight.objects.select_for_update().get(id=data.get('flight_id'))
+
+#     total_passengers = int(data.get('total_passengers', 1))
+#     total_fare = total_passengers * flight.price
+
+#     # ================= POST =================
+#     if request.method == "POST":
+
+#         method = request.POST.get("method")
+
+#         print("METHOD:", method)
+
+#         if not method:
+#             messages.error(request, "Payment method not selected")
+#             return redirect('/payment')
+
+#         # ================= WALLET =================
+#         if method == "Wallet":
+
+#             if wallet.balance < total_fare:
+#                 messages.error(request, "❌ Insufficient wallet balance")
+#                 return redirect('/payment')
+
+#             wallet.balance -= total_fare
+#             wallet.save()
+
+#             print(f"✅ Wallet payment successful. Remaining: {wallet.balance}")
+
+#         # ================= UPI =================
+#         elif method == "UPI":
+
+#             user_vpa = request.POST.get("user_upi")
+
+#             if not user_vpa:
+#                 messages.error(request, "❌ Invalid UPI ID")
+#                 return redirect('/payment')
+
+#             print(f"✅ UPI payment confirmed ({user_vpa})")
+
+#         # ================= COD =================
+#         elif method == "COD":
+#             print("✅ COD selected")
+
+#         else:
+#             messages.error(request, "Invalid payment method")
+#             return redirect('/payment')
+
+#         # ================= BOOKING =================
+#         bookings_to_email = []
+
+#         travel_date_str = data.get('travel_date')
+
+#         try:
+#             travel_date = datetime.strptime(travel_date_str, "%Y-%m-%d").date()
+#         except:
+#             travel_date = flight.date
+
+#         for i in range(total_passengers):
+
+#             name = data.get(f'name_{i}')
+#             age = data.get(f'age_{i}')
+#             gender = data.get(f'gender_{i}')
+#             seat = data.get(f'seat_{i}')
+
+#             print("Passenger:", name, seat)
+
+#             if not name or not seat:
+#                 continue
+
+#             # Seat check
+#             if Reservation.objects.filter(
+#                 flight=flight,
+#                 seat_no=seat,
+#                 status="Confirmed",
+#                 travel_date=travel_date
+#             ).exists():
+#                 messages.warning(request, f"Seat {seat} already booked")
+#                 return redirect('/payment')
+
+#             # Status logic
+#             if flight.remaining_seats > 0:
+#                 status = "Confirmed"
+#                 flight.remaining_seats -= 1
+#             else:
+#                 status = "Waiting"
+
+#             booking = Reservation.objects.create(
+#                 user=user,
+#                 flight=flight,
+#                 passenger_name=name,
+#                 age=age,
+#                 gender=gender,
+#                 seat_no=seat,
+#                 travel_date=travel_date,
+#                 pnr=generate_pnr(),
+#                 status=status
+#             )
+
+#             bookings_to_email.append(booking)
+
+#         flight.save()
+
+#         # ================= EMAIL =================
+#         for b in bookings_to_email:
+
+#             email_data = {
+#                 'passenger_name': b.passenger_name,
+#                 'pnr': b.pnr,
+#                 'flight_no': b.flight.flight_no,
+#                 'airline': b.flight.airline,
+#                 'source': b.flight.source,
+#                 'destination': b.flight.destination,
+#                 'date': b.travel_date,
+#                 'time': getattr(b.flight, 'departure_time', 'N/A'),
+#                 'seat': b.seat_no,
+#                 'status': b.status,
+#                 'booking': b
+#             }
+
+#             try:
+#                 if user.email:
+#                     send_ticket_with_pdf(user.email, email_data)
+#                     print(f"📧 Email sent for PNR: {b.pnr}")
+#             except Exception as e:
+#                 print(f"❌ Email error for {b.pnr}: {e}")
+
+#         # ================= SUCCESS =================
+#         messages.success(
+#             request,
+#             f"✅ Ticket booked successfully via {method}! ({len(bookings_to_email)} passengers)"
+#         )
+
+#         # Clear session
+#         request.session.pop('booking_data', None)
+
+#         return redirect('/mybooking')
+
+#     # ================= GET =================
+#     return render(request, 'payment.html', {
+#         'flight': flight,
+#         'total': total_fare,
+#         'passengers': total_passengers,
+#         'wallet': wallet,
+#         'today': datetime.now()
+#     })
 # ================= PAYMENT =================
 @transaction.atomic
 def payment(request):
+
     # 1. AUTH CHECK
     if 'user' not in request.session:
         return redirect('/login')
 
     user = User.objects.filter(username=request.session['user']).first()
-    
+
     # 2. DATA CHECK
     data = request.session.get('booking_data')
     if not data:
         messages.error(request, "Session expired or no booking data found.")
         return redirect('/search')
 
-    # 3. ATOMIC SELECTION (Prevents Overbooking & Race Conditions)
-    # select_for_update() locks these rows in the DB until the function finishes
+    # 3. LOCK OBJECTS
     wallet = Wallet.objects.select_for_update().get(user=user)
     flight = Flight.objects.select_for_update().get(id=data.get('flight_id'))
-    
+
     total_passengers = int(data.get('total_passengers', 1))
     total_fare = total_passengers * flight.price
 
-    # ================= POST (Handle Booking) =================
+    # 🔥 NEW: HANDLE NETBANKING / UPI RETURN
+    if request.GET.get("paid") == "true":
+        request.session['payment_done'] = True
+
+    # ================= POST =================
     if request.method == "POST":
+
         method = request.POST.get("method")
 
-        # 🔥 A. WALLET LOGIC (Reset simulation)
+        print("METHOD:", method)
+
+        if not method:
+            messages.error(request, "Payment method not selected")
+            return redirect('/payment')
+
+        # ================= WALLET (UNCHANGED) =================
         if method == "Wallet":
-            # Simulate 'Adding Money' to exactly match the fare
-            wallet.balance = total_fare 
-            wallet.save() 
-            
-            # Immediately 'Deduct' the money so balance returns to 0.0
+
+            if wallet.balance < total_fare:
+                messages.error(request, "❌ Insufficient wallet balance")
+                return redirect('/payment')
+
             wallet.balance -= total_fare
             wallet.save()
-            print(f"✅ Wallet payment processed for {user.username}. Balance reset to 0.0")
 
-        # 🔥 B. UPI LOGIC
+            print(f"✅ Wallet payment successful. Remaining: {wallet.balance}")
+
+        # ================= UPI (UNCHANGED) =================
         elif method == "UPI":
-            user_vpa = request.POST.get("user_upi")
-            print(f"--- UPI Booking confirmed for {user.username} (VPA: {user_vpa}) ---")
+            print("UPI ID payment accepted")
 
-        # 🔥 C. COD LOGIC
+        # ================= NET BANKING (NEW) =================
+        elif method == "NetBanking":
+
+            if not request.session.get('payment_done'):
+                messages.error(request, "❌ Complete Net Banking payment first")
+                return redirect('/payment')
+
+            print("✅ Net Banking payment confirmed")
+
+        # ================= COD (UNCHANGED) =================
         elif method == "COD":
-            print(f"--- COD Booking initiated for {user.username} ---")
+            print("COD accepted")
 
-        # --- START BOOKING PROCESS (Unified for all methods) ---
+        # ================= BOOKING (UNCHANGED) =================
         bookings_to_email = []
-        
-        # 4. DATE CONVERSION
+
         travel_date_str = data.get('travel_date')
+
         try:
             travel_date = datetime.strptime(travel_date_str, "%Y-%m-%d").date()
-        except (ValueError, TypeError):
-            travel_date = flight.date # Fallback to flight's default date
+        except:
+            travel_date = flight.date
 
-        # 5. BOOKING LOOP
         for i in range(total_passengers):
+
             name = data.get(f'name_{i}')
             age = data.get(f'age_{i}')
             gender = data.get(f'gender_{i}')
             seat = data.get(f'seat_{i}')
 
-            if not seat or not name:
+            print("Passenger:", name, seat)
+
+            if not name or not seat:
                 continue
 
-            # Double Check Seat Availability (Final safety check before insert)
-            if Reservation.objects.filter(flight=flight, seat_no=seat, status="Confirmed", travel_date=travel_date).exists():
-                messages.warning(request, f"Seat {seat} was just taken by another user. Please choose another seat.")
+            # Seat check
+            if Reservation.objects.filter(
+                flight=flight,
+                seat_no=seat,
+                status="Confirmed",
+                travel_date=travel_date
+            ).exists():
+                messages.warning(request, f"Seat {seat} already booked")
                 return redirect('/payment')
 
-            # Determine Status (Confirmed vs Waiting)
+            # Status logic
             if flight.remaining_seats > 0:
                 status = "Confirmed"
                 flight.remaining_seats -= 1
             else:
                 status = "Waiting"
 
-            # Create the Reservation Record
-            new_booking = Reservation.objects.create(
+            booking = Reservation.objects.create(
                 user=user,
                 flight=flight,
                 passenger_name=name,
@@ -337,13 +527,14 @@ def payment(request):
                 pnr=generate_pnr(),
                 status=status
             )
-            bookings_to_email.append(new_booking)
 
-        # 6. SAVE UPDATED FLIGHT INVENTORY
+            bookings_to_email.append(booking)
+
         flight.save()
 
-        # 7. EMAIL HANDLING (Silent Failure to prevent crashing on SMTP issues)
+        # ================= EMAIL (UNCHANGED) =================
         for b in bookings_to_email:
+
             email_data = {
                 'passenger_name': b.passenger_name,
                 'pnr': b.pnr,
@@ -357,22 +548,27 @@ def payment(request):
                 'status': b.status,
                 'booking': b
             }
+
             try:
                 if user.email:
                     send_ticket_with_pdf(user.email, email_data)
-                    print(f"📧 Ticket PDF sent to {user.email}")
+                    print(f"📧 Email sent for PNR: {b.pnr}")
             except Exception as e:
-                print(f"❌ SMTP Error for PNR {b.pnr}: {e}")
+                print(f"❌ Email error for {b.pnr}: {e}")
 
-        # 8. FINALIZE & REDIRECT
-        messages.success(request, f"✅ Ticket booked successfully! Total {len(bookings_to_email)} passenger(s).")
-        
-        # Clear the booking session data so they can't double-post
-        request.session.pop('booking_data', None) 
-        
+        # ================= SUCCESS =================
+        messages.success(
+            request,
+            f"✅ Ticket booked successfully via {method}! ({len(bookings_to_email)} passengers)"
+        )
+
+        # Clear session
+        request.session.pop('booking_data', None)
+        request.session.pop('payment_done', None)  # 🔥 clean flag
+
         return redirect('/mybooking')
 
-    # ================= GET (Render Payment Page) =================
+    # ================= GET =================
     return render(request, 'payment.html', {
         'flight': flight,
         'total': total_fare,
@@ -380,6 +576,33 @@ def payment(request):
         'wallet': wallet,
         'today': datetime.now()
     })
+
+# ================= ADD MONEY (UNCHANGED) =================
+from django.http import JsonResponse
+
+def add_wallet_money(request):
+
+    if request.method == "POST":
+
+        if 'user' not in request.session:
+            return JsonResponse({'status': 'error'})
+
+        user = User.objects.get(username=request.session['user'])
+        wallet = Wallet.objects.get(user=user)
+
+        amount = float(request.POST.get('amount', 0))
+
+        if amount <= 0:
+            return JsonResponse({'status': 'invalid'})
+
+        wallet.balance += amount
+        wallet.save()
+
+        return JsonResponse({
+            'status': 'success',
+            'new_balance': wallet.balance
+        })
+
 
 # ================= MY BOOKING =================
 def mybooking(request):
@@ -595,22 +818,51 @@ def download_ticket(request, id):
     return response
 
 
+# def airline_flights(request, airline):
+
+#     today = date.today()
+
+#     # 🔥 FILTER FUTURE FLIGHTS ONLY
+#     flights = Flight.objects.filter(
+#         airline__iexact=airline,
+#         date__gte=today
+#     ).order_by('date', 'departure_time')
+
+#     # 🟢 ADD LABELS (Today / Tomorrow)
+#     for f in flights:
+#         if f.date == today:
+#             f.day_label = "Today"
+#         elif f.date == today + timedelta(days=1):
+#             f.day_label = "Tomorrow"
+#         else:
+#             f.day_label = f.date.strftime("%d %b %Y")
+
+#     return render(request, 'airline_flights.html', {
+#         'flights': flights,
+#         'airline': airline,
+#         'today': today
+#     })
+
+
+from datetime import date, timedelta
+
 def airline_flights(request, airline):
 
     today = date.today()
+    start_date = today + timedelta(days=2)  # ✅ 2 days after today
 
-    # 🔥 FILTER FUTURE FLIGHTS ONLY
+    # 🔥 FILTER FROM 2 DAYS AHEAD
     flights = Flight.objects.filter(
         airline__iexact=airline,
-        date__gte=today
+        date__gte=start_date   # ✅ include 2nd day
     ).order_by('date', 'departure_time')
 
-    # 🟢 ADD LABELS (Today / Tomorrow)
+    # 🟢 UPDATED LABELS
     for f in flights:
-        if f.date == today:
-            f.day_label = "Today"
-        elif f.date == today + timedelta(days=1):
-            f.day_label = "Tomorrow"
+        if f.date == start_date:
+            f.day_label = "Earliest Available"
+        elif f.date == start_date + timedelta(days=1):
+            f.day_label = "Next Day"
         else:
             f.day_label = f.date.strftime("%d %b %Y")
 
@@ -619,7 +871,6 @@ def airline_flights(request, airline):
         'airline': airline,
         'today': today
     })
-
 
 
 # def route_flights(request, city):
@@ -631,19 +882,40 @@ def airline_flights(request, airline):
 #         'city': city,
 #         'date': date
 #     })
+
+# def route_flights(request, city):
+
+#     # 🔥 FILTER ONLY TODAY + FUTURE FLIGHTS
+#     flights = Flight.objects.filter(
+#         source__iexact=city,
+#         date__gte=date.today()  # ✅ FIX
+#     ).order_by('date')
+
+#     return render(request, 'route_flights.html', {
+#         'flights': flights,
+#         'city': city,
+#         'today': date.today()   # (optional)
+#     })
+
+
+from datetime import date, timedelta
+
 def route_flights(request, city):
 
-    # 🔥 FILTER ONLY TODAY + FUTURE FLIGHTS
+    today = date.today()
+    start_date = today + timedelta(days=2)  # ✅ 2 days after today
+
     flights = Flight.objects.filter(
         source__iexact=city,
-        date__gte=date.today()   # ✅ FIX
+        date__gte=start_date   # ✅ INCLUDE 2nd day
     ).order_by('date')
 
     return render(request, 'route_flights.html', {
         'flights': flights,
         'city': city,
-        'today': date.today()   # (optional)
+        'today': today
     })
+
 
 
 import random
@@ -735,9 +1007,6 @@ def clear_bookings(request):
 
     return redirect('/mybooking')
 
-def fake_upi_pay(request):
-    return render(request, 'fake_upi_pay.html', {'total': request.GET.get('amount', 1)})
-
 
 # from django.contrib.auth.models import User as AuthUser
 
@@ -760,3 +1029,48 @@ def fake_upi_pay(request):
 #         return redirect('/payment')
 
 #     return render(request, "add_money.html")
+
+
+
+def fake_upi_pay(request):
+    return render(request, 'fake_upi_pay.html', {
+        'total': request.GET.get('amount'),
+        'flight': request.GET.get('flight'),
+        'source': request.GET.get('src'),
+        'destination': request.GET.get('dest'),
+        'date': request.GET.get('date'),
+    })
+
+
+def fake_upi(request):
+    return render(request, "fake_upi.html")
+
+
+from django.http import JsonResponse
+
+def add_wallet_money(request):
+
+    if request.method == "POST":
+
+        if 'user' not in request.session:
+            return JsonResponse({'status': 'error'})
+
+        user = User.objects.get(username=request.session['user'])
+        wallet = Wallet.objects.get(user=user)
+
+        amount = float(request.POST.get('amount', 0))
+
+        if amount <= 0:
+            return JsonResponse({'status': 'invalid'})
+
+        wallet.balance += amount
+        wallet.save()
+
+        return JsonResponse({
+            'status': 'success',
+            'new_balance': wallet.balance
+        })
+
+
+def fake_netbanking(request):
+    return render(request, 'fake_netbanking.html')

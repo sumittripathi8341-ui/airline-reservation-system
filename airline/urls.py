@@ -43,5 +43,9 @@ urlpatterns = [
     path('clear-bookings/', views.clear_bookings),
     path('fake-upi-pay/', views.fake_upi_pay, name='fake_upi_pay'),
 
+    path('fake-upi/', views.fake_upi),
 
+    path('add-money/', views.add_wallet_money, name='add_money'),
+
+    path('fake-netbanking/', views.fake_netbanking),
 ]
