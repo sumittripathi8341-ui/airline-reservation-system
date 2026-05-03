@@ -24,32 +24,6 @@ class Flight(models.Model):
         return f"{self.flight_no} ({self.date})"
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # 🎟 Reservation Model
 class Reservation(models.Model):
 
